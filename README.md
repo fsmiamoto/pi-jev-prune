@@ -20,7 +20,7 @@ Published as a reference implementation. Works, tested, rough edges. Run in `dry
 
 Full write-up: [`experiments/REPORT.md`](experiments/REPORT.md). Offline replay of 14 sessions + 13 live runs on a small Rust repo (Sonnet 4.5).
 
-- Jev's signal is in the low tail: nothing with p < 0.20 was ever needed later; 0.20–0.40 is a coin flip; 0.35 ≈ random. Default threshold 0.25.
+- Jev's signal is in the low tail: below p 0.15, 1 of 28 outputs was used later; 0.15–0.30 ≈ 1 in 4, the same as random (24 % base rate). A cutoff of 0.20 is half as wrong as random, 0.35 ≈ random. Default threshold 0.25.
 - Live: 0 recalls, 0 hallucinated identifiers in 13 runs. Peak context −15 % on a 3-task session; the benefit compounds across turns.
 - Every applied prune is a prompt-cache rewrite. Unbatched it was net-negative in cost; batched it's ≈ break-even. The win is headroom, not money.
 - A no-model rule (`read` later superseded by `edit`/`read` of the same file) did much of the useful pruning.

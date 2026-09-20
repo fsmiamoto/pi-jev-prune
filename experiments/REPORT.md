@@ -8,7 +8,7 @@ Two experiments on the question *"can Jev tell which completed tool results the 
 
 TL;DR
 
-- Jev's p(need-to-re-read) has real signal **in the low tail only**: p < 0.20 is confidently prunable (8–13 % proxy-FP); 0.20–0.40 ≈ coin flip.
+- Jev's p(need-to-re-read) has real signal **in the low tail only**: cutoffs of 0.15–0.20 give 8–13 % proxy-FP vs a 24 % base rate (by first score: 1/28 below 0.15, ~1 in 4 from 0.15–0.30); 0.20–0.40 ≈ coin flip.
   The original default threshold 0.35 prunes 90 % of everything judged and is indistinguishable from random pruning at equal volume.
 - **Recommended threshold 0.25** (saves ~half the prunable tokens at 17 % proxy-FP; peak context −22 % across the replayed sessions).
   0.20 is the conservative choice (13 % FP, −13 % peak).
