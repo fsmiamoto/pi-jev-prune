@@ -266,7 +266,22 @@ live["totalIdsChecked"] = sum(r["idsTotal"] for r in live["runs"])
 live["reasons"] = dict(sum((Counter(r["reasons"]) for r in live["runs"]), Counter()))
 live["firstPAll"] = [p for r in live["runs"] for p in r["firstP"]]
 
-data = {"replay": replay, "live": live, "built": datetime.now().strftime("%Y-%m-%d %H:%M")}
+# ---------------------------------------------------------------- a real Jev request, reconstructed with the pipeline code
+import subprocess
+sample = None
+on_dir = os.path.join(EXP, "out", "live-multi", "multi-on")
+sess = glob.glob(os.path.join(on_dir, "sessions", "*.jsonl"))
+if sess:
+    try:
+        raw = subprocess.run(
+            ["node", "--experimental-strip-types", os.path.join(EXP, "visual", "sample-request.ts"), sess[0], os.path.join(on_dir, "jev-prune.log.jsonl"), "53"],
+            capture_output=True, text=True, check=True, cwd=ROOT,
+        ).stdout
+        sample = json.loads(raw)
+    except subprocess.CalledProcessError as e:
+        print("sample-request failed:", e.stderr[-500:])
+
+data = {"replay": replay, "live": live, "sample": sample, "built": datetime.now().strftime("%Y-%m-%d %H:%M")}
 tpl = open(os.path.join(EXP, "visual", "template.html")).read()
 html = tpl.replace("__DATA__", json.dumps(data))
 open(os.path.join(OUT, "index.html"), "w").write(html)

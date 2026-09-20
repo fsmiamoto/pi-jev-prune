@@ -71,6 +71,7 @@
   <nav><ol>
     <li><a href="#problem">The backpack keeps getting heavier</a></li>
     <li><a href="#helper">The helper and the sticky note</a></li>
+    <li><a href="#ask">What exactly do we send Jev?</a></li>
     <li><a href="#backpack">A real backpack, before and after</a></li>
     <li><a href="#help">Did it help?</a></li>
     <li><a href="#safe">Did we ever throw away something needed?</a></li>
@@ -101,6 +102,23 @@
     </div>
     <div class="pic" style="margin-top:14px"><h3>A real sticky note from one of the runs</h3><code class="stub" id="stub-example"></code>
       <p style="margin:.2rem 0 0;color:var(--muted);font-size:.9rem">The original stays in the session file. Only what is <i>sent to the model</i> changes.</p></div>
+  </section>
+
+  <section id="ask">
+    <h2>What exactly do we send Jev? A tiny card for each old output, plus what pi is doing right now.</h2>
+    <p class="kid">Jev never sees the backpack. It sees a <b>summary card</b> for each candidate — the first 300 characters, the last 100, how old it is, and the first thing pi said after reading it — plus the <b>task</b> (the user's message) and <b>now</b> (pi's latest words). One question per card, all in one request. This is a real request from the main run, rebuilt with the same code.</p>
+    <div class="big" id="ask-funnel"></div>
+    <div class="pic"><h3>The question (asked once per card) and how Jev is told to judge it</h3>
+      <p style="margin:.2rem 0 .6rem;font-size:1.05rem"><i id="q-text"></i></p>
+      <table><tr><th style="width:12%">answer</th><th>when</th></tr><tr><td><b class="warn">yes, keep</b></td><td id="q-true"></td></tr><tr><td><b class="ok">no, prune</b></td><td id="q-false"></td></tr></table></div>
+    <div class="pic"><h3>The state: <code>task</code> and <code>now</code> at this moment (step <span id="s-step"></span>, window “<span id="s-window"></span>”)</h3>
+      <p style="margin:.3rem 0"><b>task</b> <span style="color:var(--muted);font-size:.85rem">(last user message, ≤ 1000 chars)</span></p><code class="stub" id="s-task" style="background:#F1F3F6"></code>
+      <p style="margin:.3rem 0"><b>now</b> <span style="color:var(--muted);font-size:.85rem">(pi's latest text, ≤ 1000 chars)</span></p><code class="stub" id="s-now" style="background:#F1F3F6"></code></div>
+    <div class="pic"><h3>The 16 cards, and what Jev answered (green = would prune at 0.25)</h3><div id="s-cards"></div>
+      <details style="margin-top:.6rem"><summary>Raw request JSON (state + one question), as sent to <code>client.systemOne()</code></summary><pre class="mono" id="s-raw" style="white-space:pre-wrap;font-size:.72rem;max-height:420px;overflow:auto;background:#F1F3F6;padding:10px;border-radius:8px"></pre></details></div>
+    <p class="sowhat">Notice: <code>now</code> names <code>get.rs</code> and <code>output.rs</code> as the files pi is about to edit → Jev keeps them (0.57, 0.62) even though they're 51 steps old. That's the task-awareness we wanted.</p>
+    <p class="sowhat bad">Also notice two weaknesses of the card: the nine parallel reads all carry the <i>same</i> <code>agentReaction</code> (it's the text after the whole step, not per file), and the <code>bash</code> outputs have none at all (pi went straight to the next tool call). Jev is judging those mostly from <code>head</code> and <code>arg</code>. And <code>targets.rs</code> at 0.62 is an over-keep — nothing in <code>now</code> points at it.</p>
+    <details><summary>Plumbing</summary><p>One HTTPS call to TypeSafe: <code>systemOne({ model: "jev-latest", state, questions })</code> with a 2 s timeout and no retries; on timeout the window is skipped and retried at the next one. Cards are batched so state + questions stay under 24k tokens (this request: <span id="s-tok"></span> tokens estimated). Questions are keyed <code>c0…c15</code> and mapped back to <code>toolCallId</code>s; each answer is a number 0–1 (<code>noul</code>). Latency in the live runs: p50 ≈ 300 ms, max 1.1 s.</p></details>
   </section>
 
   <section id="backpack">
@@ -308,6 +326,16 @@ if (off) lineChart($("#c-problem"), [{ pts: off.calls.map((c) => ({ y: c.ctx }))
 
 // stub example
 { const p = on?.pruned.find((x) => x.tool === "read") ?? on?.pruned[0]; if (p) $("#stub-example").textContent = `[pruned: ${p.tool} ${p.arg} — ${p.lines} lines/~${p.size} tok. Use recall("${p.id}") to restore.]`; }
+
+// ask: real request
+if (DATA.sample) { const S = DATA.sample;
+  $("#ask-funnel").innerHTML = `<div><strong>${S.contextMessages}</strong><small>messages in the backpack (~${fmtK(S.contextTokensEstimate)} tokens)</small></div><div><strong>${S.candidatesInContext}</strong><small>tool outputs in it</small></div><div><strong>${S.eligible}</strong><small>old enough, big enough, not yet decided</small></div><div><strong>${S.sentToJev}</strong><small>cards sent to Jev this time (~${fmtK(S.stateTokensEstimate)} tokens); the other ${S.eligible - S.sentToJev} were asked about within the last 3 steps or already staged</small></div>`;
+  $("#q-text").textContent = S.question; $("#q-true").textContent = S.criteria.true; $("#q-false").textContent = S.criteria.false;
+  $("#s-step").textContent = S.step; $("#s-window").textContent = S.window; $("#s-task").textContent = S.state.task; $("#s-now").textContent = S.state.now; $("#s-tok").textContent = fmtK(S.stateTokensEstimate);
+  const pcol = (p) => p < 0.25 ? "var(--pruned)" : p < 0.4 ? "var(--cost)" : "var(--ink)";
+  $("#s-cards").innerHTML = `<table><tr><th>#</th><th>tool</th><th>arg</th><th class="num">turns ago</th><th class="num">tokens</th><th>head (first 300 chars, shown 90)</th><th>agentReaction</th><th class="num">Jev p</th></tr>` +
+    S.state.candidates.map((c, i) => { const a = S.answers[i]; return `<tr><td>${c.id}</td><td>${esc(c.tool)}</td><td class="mono">${esc(c.arg.slice(0, 60))}${c.arg.length > 60 ? "…" : ""}</td><td class="num">${c.turnsAgo}</td><td class="num">${fmtK(c.sizeTokens)}</td><td class="mono" style="color:var(--muted);max-width:240px">${esc(c.head.slice(0, 90))}…</td><td style="color:var(--muted);max-width:180px;font-size:.8rem">${c.agentReaction ? esc(c.agentReaction.slice(0, 70)) + "…" : "<i>(none)</i>"}</td><td class="num" style="font-weight:800;color:${pcol(a.p)}">${a.p.toFixed(2)}</td></tr>`; }).join("") + "</table>";
+  $("#s-raw").textContent = JSON.stringify({ model: "jev-latest", state: S.state, questions: { c0: S.questionsExample, "c1…c15": "same shape, candidate: candidates[i]" } }, null, 2); }
 
 // backpack
 if (on) { backpack($("#c-backpack"), on.backpack.blocks, on.backpack.ctx); $("#bp-title").textContent = `Messages in context at the end of task ${on.backpack.turn}, pruning on (estimated tokens)`;
