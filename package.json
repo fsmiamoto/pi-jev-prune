@@ -1,0 +1,43 @@
+{
+  "name": "pi-jev-prune",
+  "version": "0.1.0",
+  "description": "Jev-driven context pruning for pi: replaces stale tool results with recoverable stubs before each LLM call",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "pi",
+    "pi-package",
+    "pi-extension",
+    "typesafe",
+    "jev",
+    "context",
+    "pruning"
+  ],
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit -p .",
+    "test:unit": "node --test --experimental-strip-types 'test/**/*.test.ts'",
+    "test": "npm run typecheck && npm run test:unit",
+    "test:live": "node --test --experimental-strip-types 'test/**/*.live.ts'",
+    "smoke": "node --experimental-strip-types scripts/smoke.ts"
+  },
+  "dependencies": {
+    "@typesafe-ai/sdk": "^0.6.0"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-agent-core": "^0.86.0",
+    "@earendil-works/pi-ai": "0.86.0",
+    "@earendil-works/pi-coding-agent": "0.86.0",
+    "@earendil-works/pi-tui": "0.86.0",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  }
+}
