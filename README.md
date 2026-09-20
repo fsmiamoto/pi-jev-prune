@@ -18,6 +18,7 @@ Published as a reference implementation. Works, tested, rough edges. Run in `dry
 
 ## Results
 
+**Visual report (plain-language, with the real Jev request and every chart): [fsmiamoto.github.io/pi-jev-prune](https://fsmiamoto.github.io/pi-jev-prune/)**.
 Full write-up: [`experiments/REPORT.md`](experiments/REPORT.md). Offline replay of 14 sessions + 13 live runs on a small Rust repo (Sonnet 4.5).
 
 - Jev's signal is in the low tail: below p 0.15, 1 of 28 outputs was used later; 0.15–0.30 ≈ 1 in 4, the same as random (24 % base rate). A cutoff of 0.20 is half as wrong as random, 0.35 ≈ random. Default threshold 0.25.

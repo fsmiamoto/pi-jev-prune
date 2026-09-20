@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the visual report: experiments/out/visual/index.html (self-contained; data inlined).
+"""Build the visual report: docs/index.html (self-contained; data inlined; published via GitHub Pages).
 
 Reads experiments/out/ (replay), experiments/out.sweep/ (threshold sweep), experiments/out/live*/ (live A/B).
 Usage: python3 experiments/visual/build.py
@@ -13,7 +13,7 @@ from datetime import datetime
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 EXP = os.path.join(ROOT, "experiments")
-OUT = os.path.join(EXP, "out", "visual")
+OUT = os.path.join(ROOT, "docs")  # served by GitHub Pages (main, /docs)
 os.makedirs(OUT, exist_ok=True)
 
 
@@ -282,7 +282,9 @@ if sess:
         print("sample-request failed:", e.stderr[-500:])
 
 data = {"replay": replay, "live": live, "sample": sample, "built": datetime.now().strftime("%Y-%m-%d %H:%M")}
+import re
+payload = re.sub(r"/Users/[^/\"\\ ]+", "~", json.dumps(data))  # home dirs → ~ (paths from replayed sessions)
 tpl = open(os.path.join(EXP, "visual", "template.html")).read()
-html = tpl.replace("__DATA__", json.dumps(data))
+html = tpl.replace("__DATA__", payload)
 open(os.path.join(OUT, "index.html"), "w").write(html)
 print(os.path.join(OUT, "index.html"), len(html) // 1024, "KB")
