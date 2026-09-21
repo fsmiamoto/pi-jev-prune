@@ -1,6 +1,9 @@
 # pi-jev-prune
 
-Experimental [pi](https://github.com/earendil-works/pi-coding-agent) extension that prunes stale tool results from context using
+> This extension is not ready for general usage and don't recommend adding it to your main Pi workflow yet.
+> Rather than just hype, we did some actual experiments to figure out if this thing actually works.
+
+[pi](https://github.com/earendil-works/pi-coding-agent) extension that prunes stale tool results from context using
 [TypeSafe's Jev](https://typesafe.ai). Before each LLM call it asks Jev which completed tool outputs the agent won't need again and
 replaces them with a recoverable stub:
 
