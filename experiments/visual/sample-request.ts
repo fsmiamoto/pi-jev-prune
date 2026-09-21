@@ -11,7 +11,7 @@ import { buildRequest, estimateStateTokens, CRITERIA, QUESTION } from "../../src
 
 const [sessionPath, logPath, stepArg] = process.argv.slice(2);
 const step = Number(stepArg);
-const entries = parseSessionEntries(readFileSync(sessionPath!, "utf8"));
+const entries = parseSessionEntries(readFileSync(sessionPath!, "utf8")).filter((entry) => entry.type !== "session");
 const log = readFileSync(logPath!, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l));
 
 // Context as pi would have sent it for the LLM call that produced assistant message #step:

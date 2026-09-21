@@ -33,14 +33,14 @@ Full write-up: [`experiments/REPORT.md`](experiments/REPORT.md). Offline replay 
 ## Install
 
 ```bash
-git clone https://github.com/fsmiamoto/pi-jev-prune ~/Code/pi-jev-prune && cd ~/Code/pi-jev-prune && npm install
+pi install npm:pi-jev-prune
 ```
 
-`~/.pi/agent/settings.json`:
+The installer registers the package in `~/.pi/agent/settings.json`. Keep dry mode for initial use:
 
 ```jsonc
 {
-  "packages": ["/Users/you/Code/pi-jev-prune"],
+  "packages": ["npm:pi-jev-prune"],
   "jev-prune": { "mode": "dry" }
 }
 ```
@@ -97,5 +97,31 @@ Experiments: `experiments/replay.ts` (replay your own sessions; `JEV_PRUNE_SESSI
 optional `JEV_PRUNE_EXCLUDE='pattern'`), `experiments/live.ts` (headless A/B on a repo clone), `experiments/analyze.ts`.
 
 Not yet tried: ingest-time chunk filtering of large outputs (no cache cost), apply-only-when-cache-is-cold, a "delegate to subagent" nudge.
+
+## Maintainer releases
+
+CI runs typechecking and unit tests on every push and PR. Release publishing uses Node 24 and npm ≥ 11.5.1; both workflows install current npm 11 explicitly (early Node 24 releases bundled older npm).
+
+**One-time setup:**
+
+1. If the npm package does not exist yet, bootstrap it locally with Node 24 and npm ≥ 11.5.1:
+   ```bash
+   npm login
+   npm ci
+   npm test
+   npm publish --access public
+   ```
+2. In npm's package settings → **Trusted Publisher**, select GitHub Actions and enter:
+   - Organization/user: `fsmiamoto`
+   - Repository: `pi-jev-prune`
+   - Workflow filename: `publish.yml` (not the full path)
+   - Environment: leave blank
+   - If shown, allow direct `npm publish` in allowed actions.
+3. No `NPM_TOKEN` or other npm secret is needed. [Trusted publishing](https://docs.npmjs.com/trusted-publishers/) uses OIDC on GitHub-hosted runners (`ubuntu-latest` here); self-hosted runners are unsupported. Keep `package.json`'s `repository.url` matching this repository. Public repository/package publishing gets automatic provenance.
+4. After verifying OIDC publishing works, npm recommends **Require two-factor authentication and disallow tokens** in Publishing access.
+
+**Each release:** bump `package.json` and `package-lock.json` to a new, unpublished version (including after bootstrap), commit reviewed changes, and push them with a tag exactly matching `v<package.json version>`, e.g. `v0.1.1`. Publish a GitHub Release for that tag. The workflow checks the tag, installs dependencies, and runs `npm test` before `npm publish --access public`.
+
+Tag pushes and draft releases do not publish. Published prereleases also trigger this workflow and use npm's default `latest` dist-tag; this workflow does not select a separate prerelease channel.
 
 MIT

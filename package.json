@@ -4,6 +4,14 @@
   "description": "Jev-driven context pruning for pi: replaces stale tool results with recoverable stubs before each LLM call",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fsmiamoto/pi-jev-prune.git"
+  },
+  "homepage": "https://github.com/fsmiamoto/pi-jev-prune#readme",
+  "bugs": {
+    "url": "https://github.com/fsmiamoto/pi-jev-prune/issues"
+  },
   "keywords": [
     "pi",
     "pi-package",
@@ -31,6 +39,12 @@
   },
   "dependencies": {
     "@typesafe-ai/sdk": "^0.6.0"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-agent-core": "*",
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
   },
   "devDependencies": {
     "@earendil-works/pi-agent-core": "^0.86.0",
