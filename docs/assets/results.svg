@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="370" viewBox="0 0 880 370" role="img" aria-labelledby="title desc">
+<title id="title">Less context, more cache writes</title>
+<desc id="desc">Off: peak context 89,361 tokens, cache writes 203,559 tokens; Batched (on): peak context 75,938 tokens, cache writes 380,398 tokens; Every-call: peak context 76,543 tokens, cache writes 537,905 tokens. Both bar charts start at zero; their scales differ. One three-task session per mode, Claude Sonnet 4.5; not a benchmark. Pruning threshold 0.25, budget 100,000 tokens.</desc>
+<rect width="880" height="370" rx="12" fill="#F8FAFC"/>
+<g font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif">
+<text x="32" y="37" font-size="24" fill="#152C43" font-weight="700" text-anchor="start">Less context, more cache writes</text>
+<text x="32" y="61" font-size="14" fill="#4B6075" font-weight="400" text-anchor="start">Live session: architecture → error fixes → execution trace</text>
+<path d="M440 87V316" stroke="#DCE4EC"/>
+<text x="32" y="103" font-size="18" fill="#152C43" font-weight="700" text-anchor="start">Peak context</text>
+<text x="32" y="124" font-size="13" fill="#4B6075" font-weight="400" text-anchor="start">Tokens · maximum per session</text>
+<text x="32" y="150" font-size="14" fill="#152C43" font-weight="600" text-anchor="start">Off</text>
+<text x="412" y="150" font-size="14" fill="#152C43" font-weight="400" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">89,361</text>
+<rect x="32" y="158" width="339.572" height="17" rx="2" fill="#63758A"/>
+<text x="32" y="205" font-size="14" fill="#152C43" font-weight="600" text-anchor="start">Batched (on)</text>
+<text x="412" y="205" font-size="14" fill="#152C43" font-weight="400" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">75,938</text>
+<rect x="32" y="213" width="288.564" height="17" rx="2" fill="#087F8C"/>
+<text x="32" y="260" font-size="14" fill="#152C43" font-weight="600" text-anchor="start">Every-call</text>
+<text x="412" y="260" font-size="14" fill="#152C43" font-weight="400" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">76,543</text>
+<rect x="32" y="268" width="290.863" height="17" rx="2" fill="#B65C24"/>
+<path d="M32 154V296H412" fill="none" stroke="#4B6075"/>
+<path d="M32.0 296v4" stroke="#4B6075"/>
+<text x="32.0" y="315" font-size="12" fill="#4B6075" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">0</text>
+<path d="M127.0 296v4" stroke="#4B6075"/>
+<text x="127.0" y="315" font-size="12" fill="#4B6075" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">25k</text>
+<path d="M222.0 296v4" stroke="#4B6075"/>
+<text x="222.0" y="315" font-size="12" fill="#4B6075" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">50k</text>
+<path d="M317.0 296v4" stroke="#4B6075"/>
+<text x="317.0" y="315" font-size="12" fill="#4B6075" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">75k</text>
+<path d="M412.0 296v4" stroke="#4B6075"/>
+<text x="412.0" y="315" font-size="12" fill="#4B6075" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">100k</text>
+<text x="468" y="103" font-size="18" fill="#152C43" font-weight="700" text-anchor="start">Cache writes</text>
+<text x="468" y="124" font-size="13" fill="#4B6075" font-weight="400" text-anchor="start">Tokens · cumulative per session</text>
+<text x="468" y="150" font-size="14" fill="#152C43" font-weight="600" text-anchor="start">Off</text>
+<text x="848" y="150" font-size="14" fill="#152C43" font-weight="400" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">203,559</text>
+<rect x="468" y="158" width="128.921" height="17" rx="2" fill="#63758A"/>
+<text x="468" y="205" font-size="14" fill="#152C43" font-weight="600" text-anchor="start">Batched (on)</text>
+<text x="848" y="205" font-size="14" fill="#152C43" font-weight="400" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">380,398</text>
+<rect x="468" y="213" width="240.919" height="17" rx="2" fill="#087F8C"/>
+<text x="468" y="260" font-size="14" fill="#152C43" font-weight="600" text-anchor="start">Every-call</text>
+<text x="848" y="260" font-size="14" fill="#152C43" font-weight="400" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">537,905</text>
+<rect x="468" y="268" width="340.673" height="17" rx="2" fill="#B65C24"/>
+<path d="M468 154V296H848" fill="none" stroke="#4B6075"/>
+<path d="M468.0 296v4" stroke="#4B6075"/>
+<text x="468.0" y="315" font-size="12" fill="#4B6075" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">0</text>
+<path d="M563.0 296v4" stroke="#4B6075"/>
+<text x="563.0" y="315" font-size="12" fill="#4B6075" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">150k</text>
+<path d="M658.0 296v4" stroke="#4B6075"/>
+<text x="658.0" y="315" font-size="12" fill="#4B6075" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">300k</text>
+<path d="M753.0 296v4" stroke="#4B6075"/>
+<text x="753.0" y="315" font-size="12" fill="#4B6075" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">450k</text>
+<path d="M848.0 296v4" stroke="#4B6075"/>
+<text x="848.0" y="315" font-size="12" fill="#4B6075" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">600k</text>
+<text x="32" y="342" font-size="14" fill="#152C43" font-weight="600" text-anchor="start">One 3-task session per mode · Sonnet 4.5 · Not a benchmark</text>
+<text x="32" y="361" font-size="12" fill="#4B6075" font-weight="400" text-anchor="start">Threshold 0.25 · Budget 100k tokens · Cache writes are not total cost · Source: experiment report §2.3</text>
+</g>
+</svg>

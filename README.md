@@ -1,127 +1,59 @@
 # pi-jev-prune
 
-> This extension is not ready for general usage and don't recommend adding it to your main Pi workflow yet.
-> Rather than just hype, we did some actual experiments to figure out if this thing actually works.
+[pi](https://github.com/earendil-works/pi) extension that replaces stale tool results with recoverable stubs, using [TypeSafe's Jev](https://typesafe.ai) and a superseded-read rule.
 
-[pi](https://github.com/earendil-works/pi-coding-agent) extension that prunes stale tool results from context using
-[TypeSafe's Jev](https://typesafe.ai). Before each LLM call it asks Jev which completed tool outputs the agent won't need again and
-replaces them with a recoverable stub:
-
-```
-[pruned: read src/resolve.rs — 734 lines/~8k tok. Use recall("toolu_01…") to restore.]
-```
-
-Published as a reference implementation. Works, tested, rough edges. Run in `dry` mode first.
-
-- Ephemeral — session file untouched, stubs applied in the `context` hook only.
-- Tool results only — never touches user/assistant messages or tool calls.
-- Cache-aware — prefix changes only at windows (user turn, budget pressure, cold cache); mid-run prunes are batched into one rewrite.
-- Recoverable — `recall(toolCallId)` returns the original verbatim.
-- Fails open — any error, timeout, or missing key → context unchanged.
-
-## Results
-
-**Visual report (plain-language, with the real Jev request and every chart): [fsmiamoto.github.io/pi-jev-prune](https://fsmiamoto.github.io/pi-jev-prune/)**.
-Full write-up: [`experiments/REPORT.md`](experiments/REPORT.md). Offline replay of 14 sessions + 13 live runs on a small Rust repo (Sonnet 4.5).
-
-- Jev's signal is in the low tail: below p 0.15, 1 of 28 outputs was used later; 0.15–0.30 ≈ 1 in 4, the same as random (24 % base rate). A cutoff of 0.20 is half as wrong as random, 0.35 ≈ random. Default threshold 0.25.
-- Live: 0 recalls, 0 hallucinated identifiers in 13 runs. Peak context −15 % on a 3-task session; the benefit compounds across turns.
-- Every applied prune is a prompt-cache rewrite. Unbatched it was net-negative in cost; batched it's ≈ break-even. The win is headroom, not money.
-- A no-model rule (`read` later superseded by `edit`/`read` of the same file) did much of the useful pruning.
-- Jev latency: p50 300 ms, max 1.1 s per 10–30 candidates, 0 timeouts at 2 s.
+**Experimental; not ready for general use. Don't add it to your main workflow yet.**
+Defaults to `dry`: evaluates and logs decisions without replacing tool results.
 
 ## Install
 
+Requires **pi ≥ 0.86** and `TYPESAFE_API_KEY` for Jev judgments.
+
 ```bash
 pi install npm:pi-jev-prune
+export TYPESAFE_API_KEY="your-key"
 ```
 
-The installer registers the package in `~/.pi/agent/settings.json`. Keep dry mode for initial use:
-
-```jsonc
-{
-  "packages": ["npm:pi-jev-prune"],
-  "jev-prune": { "mode": "dry" }
-}
-```
-
-Export `TYPESAFE_API_KEY`. Requires pi ≥ 0.86.
-
-## Config
-
-| key | default | |
-|---|---|---|
-| `mode` | `"dry"` | `dry` (judge + log, apply nothing) · `on` · `off` · `every-call` (experiment knob, churns cache) |
-| `budget` | `100000` | tokens treated as 100 % |
-| `threshold` | `0.25` | prune when p(needed again) < threshold. 0.20 conservative, 0.30–0.35 aggressive |
-| `minTokens` | `300` | smaller results are never candidates |
-| `exemptSteps` | `3` | results from the last N assistant steps are never candidates |
-| `pressurePct` | `0.7` | mid-run window when usage ≥ 70 % of budget |
-| `pendingPct` | `0.15` | mid-run window when un-judged prunable tokens ≥ 15 % of budget |
-| `minApplyPct` | `0.05` | stage mid-run prunes until the batch saves ≥ 5 % of budget |
-| `timeoutMs` | `2000` | Jev timeout; skip silently on timeout |
+Without the key, the superseded-read rule still runs and can prune in `on` mode.
+Original tool results remain in the session; the model can retrieve them with `recall(toolCallId)`.
 
 ## Usage
 
-- `/prune status` · `/prune show` · `/prune dry|on|off|every-call` · `/prune now` (force a window)
-- `recall(toolCallId)` — tool the model calls to restore a pruned output
-- Footer: `prune: 12k saved · 3k staged · 4k pending · 56k/100k`
-- Decision log: `~/.pi/agent/jev-prune/log.jsonl`
+- `/prune status` — mode, usage, and diagnostics.
+- `/prune show` — individual decisions.
+- `/prune dry|on|off` — change mode for this session.
+- `/prune now` — force a decision window on the next LLM call.
 
-## How it decides
+Persistent settings go under `jev-prune` in `~/.pi/agent/settings.json`:
 
-1. Candidates: tool results older than `exemptSteps`, ≥ `minTokens`, no sticky decision yet.
-2. Code rule: a `read` followed by a later `read`/`edit`/`write` of the same path → auto-prune.
-3. Window check: only consult Jev (and change stubs) at user turn / over budget / pressure / cold cache / big pending backlog. Otherwise
-   re-apply previous stubs → byte-identical prefix.
-4. Jev: one Noul per candidate over `{ task, now, candidates[{tool, arg, turnsAgo, sizeTokens, head, tail, agentReaction}] }`:
-   *"Will the agent need the full output again to finish `task`, given what it is doing `now`?"* → prune if p < `threshold`.
-5. Mid-run prunes are staged until they save ≥ `minApplyPct × budget`, then applied together. Decisions are sticky and persisted as
-   session entries keyed by `toolCallId`.
+```json
+{
+  "jev-prune": {
+    "mode": "dry",
+    "budget": 100000,
+    "threshold": 0.25
+  }
+}
+```
 
-## Limitations
+Merge this into existing settings. `budget` is the token reference for pruning triggers, not a hard context limit.
+Decisions are logged to `~/.pi/agent/jev-prune/log.jsonl`.
+See [configuration, decision rules, and limitations](docs/configuration.md).
 
-- Template stubs, no summaries. If the agent needs it, it calls `recall` (one extra step).
-- Jev sees head/tail/reaction only (~600 chars) — good at "obviously irrelevant", not "subtly still needed".
-- Small repos with "survey everything, then act" tasks → Jev is conservative and little gets pruned.
-- Not integrated with pi's compaction or pi-context (they see un-stubbed messages).
+## Results
+
+**More context headroom, not proven cost savings.** Peak context fell 15% in one three-task session.
+
+![Peak context and cumulative cache-write tokens for off, batched, and every-call pruning; less context but more cache writes.](docs/assets/results.svg)
+
+One three-task session per mode on Sonnet 4.5—not a benchmark. Batched = `on`; cache writes are not total cost.
+
+Exploratory results from 14 replayed sessions and 13 live runs—not a general benchmark or safety guarantee.
+
+[Visual report](https://fsmiamoto.github.io/pi-jev-prune/) · [Full experiment report](experiments/REPORT.md)
 
 ## Development
 
-```bash
-npm test            # typecheck + unit tests
-npm run test:live   # one real Jev request (needs TYPESAFE_API_KEY)
-```
+See [CONTRIBUTING.md](CONTRIBUTING.md) for tests, experiments, and releases.
 
-Experiments: `experiments/replay.ts` (replay your own sessions; `JEV_PRUNE_SESSIONS='--Users-me-Code-repo--,…'`,
-optional `JEV_PRUNE_EXCLUDE='pattern'`), `experiments/live.ts` (headless A/B on a repo clone), `experiments/analyze.ts`.
-
-Not yet tried: ingest-time chunk filtering of large outputs (no cache cost), apply-only-when-cache-is-cold, a "delegate to subagent" nudge.
-
-## Maintainer releases
-
-CI runs typechecking and unit tests on every push and PR. Release publishing uses Node 24 and npm ≥ 11.5.1; both workflows install current npm 11 explicitly (early Node 24 releases bundled older npm).
-
-**One-time setup:**
-
-1. If the npm package does not exist yet, bootstrap it locally with Node 24 and npm ≥ 11.5.1:
-   ```bash
-   npm login
-   npm ci
-   npm test
-   npm publish --access public
-   ```
-2. In npm's package settings → **Trusted Publisher**, select GitHub Actions and enter:
-   - Organization/user: `fsmiamoto`
-   - Repository: `pi-jev-prune`
-   - Workflow filename: `publish.yml` (not the full path)
-   - Environment: leave blank
-   - If shown, allow direct `npm publish` in allowed actions.
-3. No `NPM_TOKEN` or other npm secret is needed. [Trusted publishing](https://docs.npmjs.com/trusted-publishers/) uses OIDC on GitHub-hosted runners (`ubuntu-latest` here); self-hosted runners are unsupported. Keep `package.json`'s `repository.url` matching this repository. Public repository/package publishing gets automatic provenance.
-4. After verifying OIDC publishing works, npm recommends **Require two-factor authentication and disallow tokens** in Publishing access.
-
-**Each release:** bump `package.json` and `package-lock.json` to a new, unpublished version (including after bootstrap), commit reviewed changes, and push them with a tag exactly matching `v<package.json version>`, e.g. `v0.1.1`. Publish a GitHub Release for that tag. The workflow checks the tag, installs dependencies, and runs `npm test` before `npm publish --access public`.
-
-Tag pushes and draft releases do not publish. Published prereleases also trigger this workflow and use npm's default `latest` dist-tag; this workflow does not select a separate prerelease channel.
-
-MIT
+[MIT](LICENSE)
